@@ -1,5 +1,12 @@
 This package can be used to install orcv, chunknet, largescaleobjects, and largescaler.
-Install these packages, and ensure tmux and passwordless localhost ssh.
+Each of these packages also have a repository on Rforge and GitHub, and it is worth checking each one individually, with their package-specific demos.
+
+github.com/jcai849/orcv
+github.com/jcai849/chunknet
+github.com/jcai849/largescaleobjects
+github.com/jcai849/largescalemodels
+
+Install these packages using this one, and ensure tmux and passwordless localhost ssh.
 Then, to get a quick demonstration of LASSO using largescaler, run the following in the shell:
 
 #-----------------------------------------------------------------------------------------------------#
