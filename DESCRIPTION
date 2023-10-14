@@ -1,0 +1,14 @@
+Package: largescaler
+Type: Package
+Title: Set of packages for large scale statistical modelling
+Version: 1.0
+Date: 2023-10-15
+Author: Jason Cairns
+Maintainer: Jason Cairns <jason.cairns@auckland.ac.nz>
+Description: This package is simply a bootstrap package for the underlying stack provided; consult the imported packages for more details
+Depends:
+	orcv,
+	chunknet,
+	largescaleobjects,
+	largescalemodels
+License: MIT

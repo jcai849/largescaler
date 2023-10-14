@@ -1,0 +1,7 @@
+This package can be used to install orcv, chunknet, largescaleobjects, and largescaler.
+Install these packages, and ensure tmux and passwordless localhost ssh.
+Then, to get a quick test of LASSO using largescaler, run the following in the shell:
+
+```
+cd `Rscript -e 'cat(system.file(package="largescalemodels"))'`/dev-tests && ./interactive-test.sh lasso
+```
