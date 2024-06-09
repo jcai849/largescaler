@@ -1,0 +1,12 @@
+[submodule "largescalemodels"]
+	path = largescalemodels
+	url = ../largescalemodels
+[submodule "orcv"]
+	path = orcv
+	url = ../orcv
+[submodule "largescaleobjects"]
+	path = largescaleobjects
+	url = ../largescaleobjects
+[submodule "chunknet"]
+	path = chunknet
+	url = ../chunknet
