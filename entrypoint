@@ -5,8 +5,8 @@ set -eu
 MODEL=$1
 N_HOSTS=$2
 N_CHUNKS_PER_HOST=$3
-n=$4
-m=$5
+N=$4
+M=$5
 locator_port=9000
 
 tmux new-session -d \; split-window \
@@ -27,8 +27,8 @@ sleep 2
 
 port=$((port + 1))
 master_script=/tmp/master.R
-largescaler master '$port' '$locator_port' '$MODEL' \
-	'$N_HOSTS' '$N_CHUNKS_PER_HOST' >$master_script
+largescaler master "$port" "$locator_port" "$MODEL" \
+	"$N_HOSTS" "$N_CHUNKS_PER_HOST" "$N", "$M">$master_script
 tmux select-pane -t0 \; send-keys \
 	"R | tee master.log ; tmux kill-session" Enter \
 	"source('$master_script')" Enter

@@ -3,6 +3,8 @@ FROM debian:12
 ARG MODEL=lasso # glm tabulate
 ARG N_HOSTS=6
 ARG N_CHUNKS_PER_HOST=3
+ARG N=50000
+ARG M=30
 
 RUN apt-get update && apt-get install -y \
 	r-base \
@@ -31,4 +33,4 @@ RUN printf '%s\0' orcv chunknet largescaleobjects largescalemodels \
 COPY entrypoint largescaler /usr/local/bin
 
 WORKDIR /largescaler
-ENTRYPOINT service ssh start && entrypoint $MODEL $N_HOSTS $N_CHUNKS_PER_HOST
+ENTRYPOINT service ssh start && entrypoint $MODEL $N_HOSTS $N_CHUNKS_PER_HOST $N $M

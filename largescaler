@@ -10,20 +10,23 @@ LOCATOR_PORT=$3
 MODEL=$4
 N_HOSTS=$5
 N_CHUNKS_PER_HOST=$6
+N=$7
+M=$8
 
 set -u
 
-if [ $NODE_TYPE != locator ]; then
+if [ "$NODE_TYPE" != locator ]; then
 	ADDL_ARGS="locator_host='localhost', locator_port=${LOCATOR_PORT}L"
 fi
 
-if [ $NODE_TYPE != master ]; then
+if [ "$NODE_TYPE" != master ]; then
 	for chunknumber in $(seq N_CHUNKS_PER_HOST); do
-		pipename="/tmp/chunk-$port-$chunknumber"
+		pipename="/tmp/chunk-$PORT-$chunknumber"
 		mkfifo "$pipename"
 		# write gen_fake_data m x n/(n_chunks*n_hosts)  for host at $port to pipe
 		R -se <<-EOF &
-		# fake_data($m,$n) |>
+		$N_CHUNKS_PER_HOST, $N, $M, $N_HOSTS
+		# fake_data |>
 		# write_to_pipe("$pipename")
 		EOF
 	done
@@ -38,6 +41,6 @@ else
 		chunknet::LOCATOR(${ADDL_ARGS})
 		# get chunks to read their data from corresponding pipes (X)
 		# create new variable a = X%*%b
-		# run $model
+		$MODEL
 	EOF
 fi
