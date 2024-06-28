@@ -1,0 +1,35 @@
+#!/bin/sh
+
+set -eu
+
+MODEL=$1
+N_HOSTS=$2
+N_CHUNKS_PER_HOST=$3
+n=$4
+m=$5
+locator_port=9000
+
+tmux new-session -d \; split-window \
+	"largescaler locator $locator_port | tee locator.log"
+loaded_hosts=0
+while [ $loaded_hosts -lt "$N_HOSTS" ]; do
+	port=$((locator_port + loaded_hosts + 1))
+	if [ $((loaded_hosts % 6)) -eq 0 ]; then
+		tmux select-layout tiled
+		tmux new-window
+	fi
+	tmux split-window "largescaler worker $port $locator_port \
+	                   | tee worker-$((locator_port - port)).log"
+	loaded_hosts=$((loaded_hosts + 1))
+done
+
+sleep 2
+
+port=$((port + 1))
+master_script=/tmp/master.R
+largescaler master '$port' '$locator_port' '$MODEL' \
+	'$N_HOSTS' '$N_CHUNKS_PER_HOST' >$master_script
+tmux select-pane -t0 \; send-keys \
+	"R | tee master.log ; tmux kill-session" Enter \
+	"source('$master_script')" Enter
+tmux attach

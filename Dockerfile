@@ -1,5 +1,8 @@
-# syntax=docker/dockerfile:1
 FROM debian:12
+
+ARG MODEL=lasso # glm tabulate
+ARG N_HOSTS=6
+ARG N_CHUNKS_PER_HOST=3
 
 RUN apt-get update && apt-get install -y \
 	r-base \
@@ -17,16 +20,15 @@ Host localhost
 EOF
 
 RUN Rscript -e 'install.packages("largescalemodels",,c("http://www.rforge.net/", "https://cloud.r-project.org"))'
-COPY orcv /tmp/chunknet
-RUN cd tmp && R CMD INSTALL orcv
-COPY chunknet /tmp/chunknet
-RUN cd tmp && R CMD INSTALL chunknet
-COPY largescaleobjects /tmp/chunknet
-RUN cd tmp && R CMD INSTALL largescaleobjects
-COPY largescalemodels /tmp/chunknet
-RUN cd tmp && R CMD INSTALL largescalemodels
+WORKDIR /tmp
+COPY orcv orcv
+COPY chunknet chunknet
+COPY largescaleobjects largescaleobjects
+COPY largescalemodels largescalemodels
+RUN printf '%s\0' orcv chunknet largescaleobjects largescalemodels \
+	| xargs -0I'{}' R CMD INSTALL '{}'
 
+COPY entrypoint largescaler /usr/local/bin
 
-ENTRYPOINT service ssh start && \
-	cd `Rscript -e 'cat(system.file(package="largescalemodels"))'` && \
-	tmux new-session \; source-file dev-tests/interactive-test-lasso.tmux
+WORKDIR /largescaler
+ENTRYPOINT service ssh start && entrypoint $MODEL $N_HOSTS $N_CHUNKS_PER_HOST
