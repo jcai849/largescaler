@@ -1,5 +1,5 @@
 {
-  description = "R Dev Container with SSH and Local Packages";
+  description = "largescaler";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
@@ -9,20 +9,15 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       flake-utils,
+      ...
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
-      let
-        pkgs = import nixpkgs {
-          inherit system;
-        };
 
-        rPackages = with pkgs.rPackages; [
-          languageserver
-        ];
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
 
         orcv = pkgs.rPackages.buildRPackage {
           name = "orcv";
@@ -61,26 +56,35 @@
           ];
         };
 
-        localRPackages = [
+        Rpackages = [
           orcv
           chunknet
           largescaleobjects
           largescalemodels
         ];
 
-        allRPackages = rPackages ++ localRPackages;
+        prodREnv = pkgs.rWrapper.override { packages = Rpackages; };
+        devREnv = pkgs.rWrapper.override { packages = Rpackages ++ [ pkgs.rPackages.languageserver ]; };
 
-        REnv = pkgs.rWrapper.override { packages = allRPackages; };
+        baseImage = pkgs.dockerTools.pullImage {
+          imageName = "ubuntu";
+          imageDigest = "sha256:1e622c5f073b4f6bfad6632f2616c7f59ef256e96fe78bf6a595d1dc4376ac02";
+          sha256 = "sha256-qhsqlZVffA2oEF1xYJ4PvTa7F1rJXzaJAfuN0RQBZLc=";
+          finalImageName = "ubuntu";
+          finalImageTag = "noble";
+        };
 
         container = pkgs.dockerTools.buildImage {
           name = "largescaler";
           tag = "latest";
+          fromImage = baseImage;
           copyToRoot = pkgs.buildEnv {
             name = "image-root";
             paths = [
-              REnv
+              prodREnv
               pkgs.openssh
               pkgs.zellij
+              pkgs.bash
             ];
           };
           config = {
@@ -93,10 +97,11 @@
         packages.default = container;
 
         devShells.default = pkgs.mkShell {
-          buildInputs = [
-            REnv
-            pkgs.zellij
-            pkgs.openssh
+          buildInputs = with pkgs; [
+            devREnv
+            clang
+            clang-tools
+            zellij
           ];
         };
       }
