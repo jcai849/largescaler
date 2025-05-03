@@ -81,10 +81,15 @@
           copyToRoot = pkgs.buildEnv {
             name = "image-root";
             paths = [
-              prodREnv
               pkgs.openssh
               pkgs.zellij
               pkgs.bash
+              prodREnv
+            ];
+            pathsToLink = [
+              "/bin"
+              "/lib"
+              "/share"
             ];
           };
           config = {
