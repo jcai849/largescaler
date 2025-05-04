@@ -5,9 +5,16 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "beartype>=0.20.2",
     "ckdl>=1.0",
     "fire>=0.7.0",
 ]
 
 [project.scripts]
 largescaler = "largescaler:main"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.29.1",
+    "ruff>=0.11.8",
+]
