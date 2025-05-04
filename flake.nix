@@ -118,6 +118,7 @@
       overlay = workspace.mkPyprojectOverlay {
         sourcePreference = "wheel";
       };
+
       largescaler = pythonSet.mkVirtualEnv "largescaler-env" workspace.deps.default;
 
       editableOverlay = workspace.mkEditablePyprojectOverlay {
@@ -126,12 +127,8 @@
       editablePythonSet = pythonSet.overrideScope (
         lib.composeManyExtensions [
           editableOverlay
-
-          # Apply fixups for building an editable package of your workspace packages
           (final: prev: {
             largescaler = prev.largescaler.overrideAttrs (old: {
-              # It's a good idea to filter the sources going into an editable build
-              # so the editable package doesn't have to be rebuilt on every change.
               src = lib.fileset.toSource {
                 root = old.src;
                 fileset = lib.fileset.unions [
@@ -140,25 +137,17 @@
                   (old.src + "/largescaler/__init__.py")
                 ];
               };
-
-              # Hatchling (our build system) has a dependency on the `editables` package when building editables.
-              #
-              # In normal Python flows this dependency is dynamically handled, and doesn't need to be explicitly declared.
-              # This behaviour is documented in PEP-660.
-              #
-              # With Nix the dependency needs to be explicitly declared.
               nativeBuildInputs =
                 old.nativeBuildInputs
                 ++ final.resolveBuildSystem {
                   editables = [ ];
-                  setuptools = [ ];
                 };
             });
 
           })
         ]
       );
-      virtualenv = editablePythonSet.mkVirtualEnv "largescaler-dev-env" workspace.deps.all;
+      largescaler-dev = editablePythonSet.mkVirtualEnv "largescaler-dev-env" workspace.deps.all;
 
       # Container
 
@@ -205,11 +194,11 @@
           zellij
           devREnv
           pkgs.uv
-          virtualenv
+          largescaler-dev
         ];
         env = {
           UV_NO_SYNC = "1";
-          UV_PYTHON = "${virtualenv}/bin/python";
+          UV_PYTHON = "${largescaler-dev}/bin/python";
           UV_PYTHON_DOWNLOADS = "never";
         };
 
