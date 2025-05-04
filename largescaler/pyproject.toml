@@ -1,0 +1,13 @@
+[project]
+name = "largescaler"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ckdl>=1.0",
+    "fire>=0.7.0",
+]
+
+[project.scripts]
+largescaler = "largescaler:main"
