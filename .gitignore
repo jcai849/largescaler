@@ -1,4 +1,4 @@
 *.swp
 result
 .direnv
-largescaler/largescaler/__pycache__
+__pycache__
