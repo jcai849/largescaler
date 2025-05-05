@@ -7,11 +7,23 @@ from typing import Any
 class Node:
     def __init__(
         self,
-        type_annotation: str | None,
-        name: str | None,
-        args: list[Any] | None,
-        properties: dict[str, Any] | None,
-        children: list[Node] | None,
+        name: str | None = None,
+        args: list[Any] | None = None,
+        properties: dict[str, Any] | None = None,
+        children: list[Node] | None = None,
     ) -> None: ...
 
-class Document: ...
+class EmitterOptions:
+    def __init__(
+        self,
+        *args: Any,
+        **kwargs: Any
+            ) -> None: ...
+
+class Document:
+    def __init__(
+        self,
+        *args: Node
+    ) -> None: ...
+
+    def dump(self, opts: EmitterOptions) -> str: ...
