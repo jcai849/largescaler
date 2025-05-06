@@ -2,6 +2,7 @@
   description = "largescaler";
 
   inputs = {
+
     nixpkgs.url = "nixpkgs/nixos-unstable";
     self.submodules = true;
     pyproject-nix = {
@@ -34,6 +35,10 @@
     let
       inherit (nixpkgs) lib;
       pkgs = nixpkgs.legacyPackages.x86_64-linux;
+
+      syspkgs = [
+        pkgs.zellij
+      ];
 
       # R Environment
 
@@ -90,17 +95,7 @@
       workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./largescaler; };
       pyprojectOverrides = final: prev: {
         fire = prev.fire.overrideAttrs (old: {
-
-          # buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.zeromq ];
-
-          # uv.lock does not contain build-system metadata.
-          # Meaning that for source builds, this needs to be provided by overriding.
-          nativeBuildInputs = old.nativeBuildInputs ++ [
-            (final.resolveBuildSystem {
-              setuptools = [ ];
-            })
-          ];
-
+          nativeBuildInputs = old.nativeBuildInputs ++ [ (final.resolveBuildSystem { setuptools = [ ]; }) ];
         });
       };
 
@@ -129,21 +124,12 @@
           editableOverlay
           (final: prev: {
             largescaler = prev.largescaler.overrideAttrs (old: {
-              src = lib.fileset.toSource {
-                root = old.src;
-                fileset = lib.fileset.unions [
-                  (old.src + "/pyproject.toml")
-                  (old.src + "/README.md")
-                  (old.src + "/largescaler/__init__.py")
-                ];
-              };
               nativeBuildInputs =
                 old.nativeBuildInputs
                 ++ final.resolveBuildSystem {
                   editables = [ ];
                 };
             });
-
           })
         ]
       );
@@ -167,11 +153,10 @@
           name = "image-root";
           paths = [
             pkgs.openssh
-            pkgs.zellij
             pkgs.bash
             prodREnv
             largescaler
-          ];
+          ] ++ syspkgs;
           pathsToLink = [
             "/bin"
             "/lib"
@@ -188,14 +173,16 @@
       packages.x86_64-linux.default = container;
 
       devShells.x86_64-linux.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          clang
-          clang-tools
-          zellij
-          devREnv
-          pkgs.uv
-          largescaler-dev
-        ];
+        buildInputs =
+          with pkgs;
+          [
+            clang
+            clang-tools
+            devREnv
+            pkgs.uv
+            largescaler-dev
+          ]
+          ++ syspkgs;
         env = {
           UV_NO_SYNC = "1";
           UV_PYTHON = "${largescaler-dev}/bin/python";

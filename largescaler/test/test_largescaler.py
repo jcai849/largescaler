@@ -1,5 +1,5 @@
 import pytest
-from largescaler import Local, Master, Run
+from largescaler.cluster import Local, Master, Run
 
 
 @pytest.fixture

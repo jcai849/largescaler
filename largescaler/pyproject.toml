@@ -8,10 +8,13 @@ dependencies = [
     "beartype>=0.20.2",
     "ckdl>=1.0",
     "fire>=0.7.0",
+    "pexpect>=4.9.0",
 ]
 
 [project.scripts]
-largescaler = "largescaler:main"
+largescaler = "largescaler.largescaler:main"
+run-interactive = "largescaler.interactive_runner:main"
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
