@@ -204,7 +204,7 @@
 
         shellHook = ''
           unset PYTHONPATH
-          export REPO_ROOT=$(git rev-parse --show-toplevel)
+          export REPO_ROOT=$(git rev-parse --show-toplevel)/largescaler
         '';
 
       };
