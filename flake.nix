@@ -79,7 +79,20 @@
         ];
       };
 
+      largescalerr = pkgs.rPackages.buildRPackage {
+        name = "largescalemodels";
+        version = "1.3";
+        src = ./.;
+        propagatedBuildInputs = [
+          orcv
+          chunknet
+          largescaleobjects
+          largescalemodels
+        ];
+      };
+
       Rpackages = [
+        largescalerr
         orcv
         chunknet
         largescaleobjects
