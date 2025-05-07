@@ -99,8 +99,7 @@
         largescalemodels
       ];
 
-      prodREnv = pkgs.rWrapper.override { packages = Rpackages; };
-      devREnv = pkgs.rWrapper.override { packages = Rpackages ++ [ pkgs.rPackages.languageserver ]; };
+      REnv = pkgs.rWrapper.override { packages = Rpackages; };
 
       # Python Environment
 
@@ -167,7 +166,7 @@
           paths = [
             pkgs.openssh
             pkgs.bash
-            prodREnv
+            REnv
             largescaler
           ] ++ syspkgs;
           pathsToLink = [
@@ -191,7 +190,7 @@
           [
             clang
             clang-tools
-            devREnv
+            REnv
             pkgs.uv
             largescaler-dev
           ]
