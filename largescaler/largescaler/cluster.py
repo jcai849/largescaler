@@ -15,8 +15,6 @@ class Run:
 
 @dataclass
 class Node(ABC):
-    run: Run
-
     @abstractmethod
     def to_kdl(self) -> ckdl.Node:
         pass
@@ -24,11 +22,8 @@ class Node(ABC):
 
 @dataclass
 class Master(Node):
+    run: Run
     locator_port: int
-
-    @override
-    def __str__(self) -> str:
-        return "LargeScaleR Master Node"
 
     def _run_cmd(self) -> list[str]:
         match self.run.type:
@@ -65,16 +60,52 @@ class Master(Node):
 class Locator(Node):
     port: int
 
+    def _run_cmd(self):
+        return [
+            "-e",
+            "library(largescaler);"
+            + f'chunknet::locator_node("localhost", {self.port}L, verbose=TRUE)',
+        ]
+
     @override
-    def to_kdl(self) -> ckdl.Node: ...
+    def to_kdl(self) -> ckdl.Node:
+        return ckdl.Node(
+            "pane",
+            children=[
+                ckdl.Node("focus", [True]),
+                ckdl.Node("name", [str(self)]),
+                ckdl.Node("command", ["Rscript"]),
+                ckdl.Node("args", self._run_cmd()),
+            ],
+        )
 
 
 @dataclass
 class Worker(Node):
     port: int
+    locator_port: int
+
+    def _run_cmd(self):
+        return [
+            "-e",
+            "library(largescaler);"
+            + "Sys.sleep(2);"
+            + f'chunknet::worker_node("localhost", {self.port}L,'
+            + 'locator_address="localhost",'
+            + f"locator_port={self.locator_port}L, verbose=T)",
+        ]
 
     @override
-    def to_kdl(self) -> ckdl.Node: ...
+    def to_kdl(self) -> ckdl.Node:
+        return ckdl.Node(
+            "pane",
+            children=[
+                ckdl.Node("focus", [True]),
+                ckdl.Node("name", [str(self)]),
+                ckdl.Node("command", ["Rscript"]),
+                ckdl.Node("args", self._run_cmd()),
+            ],
+        )
 
 
 class Cluster(ABC):
@@ -99,9 +130,9 @@ class Local(Cluster):
         locator_port = 8000
         next_port = locator_port + 1
         self.master: Master = Master(self.run, locator_port)
-        self.locator: Locator = Locator(self.run, locator_port)
-        self.compute_nodes: list[Worker] = [
-            Worker(self.run, p)
+        self.locator: Locator = Locator(locator_port)
+        self.workers: list[Worker] = [
+            Worker(p, locator_port)
             for p in range(next_port, next_port + self.node_count + 1)
         ]
 
@@ -111,12 +142,17 @@ class Local(Cluster):
         self.__exec_layout(layout)
 
     def to_kdl(self) -> ckdl.Document:
-        statusbar = ckdl.Node(
+        status_bar = ckdl.Node(
             "pane",
             properties={"size": 1, "borderless": True},
             children=[
-                ckdl.Node("plugin", properties={"location": "zellij:compact-bar"})
+                ckdl.Node("plugin", properties={"location": "zellij:status-bar"})
             ],
+        )
+        tab_bar = ckdl.Node(
+            "pane",
+            properties={"size": 1, "borderless": True},
+            children=[ckdl.Node("plugin", properties={"location": "zellij:tab-bar"})],
         )
         return ckdl.Document(
             ckdl.Node(
@@ -125,12 +161,42 @@ class Local(Cluster):
                     ckdl.Node(
                         "tab",
                         properties={"name": "Master"},
-                        children=[self.master.to_kdl(), statusbar], # TODO Also include tab bar
+                        children=[tab_bar, self.master.to_kdl(), status_bar],
                     ),
-                    # ckdl.Node(name="tab", children=[self.locator.to_kdl()]),
-                    # ckdl.Node(name="tab", children=[node.to_kdl() for node in self.compute_nodes]),
+                    ckdl.Node(
+                        "tab",
+                        properties={"name": "Locator"},
+                        children=[tab_bar, self.locator.to_kdl(), status_bar],
+                    ),
+                    ckdl.Node(
+                        "tab",
+                        properties={"name": "Workers"},
+                        children=[
+                            tab_bar,
+                            ckdl.Node(
+                                "pane",
+                                properties={"stacked": True},
+                                children=[w.to_kdl() for w in self.workers],
+                            ),
+                            status_bar,
+                        ],
+                    ),
                 ],
-            )
+            ),
+            ckdl.Node("show_startup_tips", args=[False]),
+            ckdl.Node("show_release_notes", args=[False]),
+            ckdl.Node(
+                "ui",
+                children=[
+                    ckdl.Node(
+                        "pane_frames",
+                        children=[
+                            ckdl.Node("rounded_corners", args=[True]),
+                            ckdl.Node("hide_session_name", args=[True]),
+                        ],
+                    )
+                ],
+            ),
         )
 
     def __exec_layout(self, layout: ckdl.Document):
