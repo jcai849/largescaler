@@ -36,7 +36,8 @@ class Master(Node):
         return [
             "--run=R",
             "library(largescaler)",
-            f"# chunknet::LOCATOR({self.locator_port})",
+            "orcv::start()",
+            f'chunknet::LOCATOR("localhost", {self.locator_port})',
             run,
             "1+1",
             "-",
