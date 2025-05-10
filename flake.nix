@@ -161,20 +161,23 @@
       container = pkgs.dockerTools.buildImage {
         name = "largescaler";
         tag = "latest";
-        fromImage = baseImage;
+        # fromImage = baseImage;
         copyToRoot = pkgs.buildEnv {
           name = "image-root";
           paths = [
+            pkgs.coreutils-full
+            pkgs.bash
             R
             radian
             largescaler
           ] ++ syspkgs;
-          pathsToLink = [
-            "/bin"
-            "/lib"
-            "/share"
-          ];
+          # pathsToLink = [
+          #   "/bin"
+          #   "/lib"
+          #   "/share"
+          # ];
         };
+        extraCommands = "mkdir tmp";
         config = {
           Cmd = [ "bash" ];
         };
