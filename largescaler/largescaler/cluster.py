@@ -34,7 +34,7 @@ class Master(Node):
             case _:
                 raise TypeError
         return [
-            "--run=R",
+            "--run=radian",
             "library(largescaler)",
             "orcv::start()",
             f'chunknet::LOCATOR("localhost", {self.locator_port})',

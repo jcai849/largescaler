@@ -99,7 +99,8 @@
         largescalemodels
       ];
 
-      REnv = pkgs.rWrapper.override { packages = Rpackages; };
+      R = pkgs.rWrapper.override { packages = Rpackages; };
+      radian = pkgs.radianWrapper.override { packages = Rpackages; };
 
       # Python Environment
 
@@ -164,9 +165,8 @@
         copyToRoot = pkgs.buildEnv {
           name = "image-root";
           paths = [
-            pkgs.openssh
-            pkgs.bash
-            REnv
+            R
+            radian
             largescaler
           ] ++ syspkgs;
           pathsToLink = [
@@ -190,7 +190,8 @@
           [
             clang
             clang-tools
-            REnv
+            R
+            radian
             pkgs.uv
             largescaler-dev
           ]
