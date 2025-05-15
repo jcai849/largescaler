@@ -6,7 +6,7 @@ github.com/jcai849/chunknet
 github.com/jcai849/largescaleobjects
 github.com/jcai849/largescalemodels
 
-Or, just use this as a flake. Install nix, then run:
+Or, just use this as a flake. Install nix and direnv, then run:
 
-nix shell
+direnv allow
 largescaler run --type=sandbox local --node-count=30

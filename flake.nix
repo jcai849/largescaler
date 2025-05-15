@@ -2,9 +2,10 @@
   description = "largescaler";
 
   inputs = {
+    utils.url = "github:numtide/flake-utils";
 
-    nixpkgs.url = "nixpkgs/nixos-unstable";
-    self.submodules = true;
+    largescalemodels.url = "github:jcai849/largescalemodels";
+
     pyproject-nix = {
       url = "github:pyproject-nix/pyproject.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -27,189 +28,135 @@
   outputs =
     {
       nixpkgs,
+      utils,
       uv2nix,
       pyproject-nix,
       pyproject-build-systems,
+      largescalemodels,
       ...
     }:
-    let
-      inherit (nixpkgs) lib;
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+    utils.lib.eachDefaultSystem (
+      system:
+      let
+        inherit (nixpkgs) lib;
+        pkgs = nixpkgs.legacyPackages.x86_64-linux;
 
-      syspkgs = [
-        pkgs.zellij
-      ];
-
-      # R Environment
-
-      orcv = pkgs.rPackages.buildRPackage {
-        name = "orcv";
-        version = "1.1";
-        src = ./orcv;
-      };
-
-      chunknet = pkgs.rPackages.buildRPackage {
-        name = "chunknet";
-        version = "1.1";
-        src = ./chunknet;
-        propagatedBuildInputs = [
-          orcv
-          pkgs.rPackages.uuid
+        syspkgs = [
+          pkgs.zellij
         ];
-      };
 
-      largescaleobjects = pkgs.rPackages.buildRPackage {
-        name = "largescaleobjects";
-        version = "1.0";
-        src = ./largescaleobjects;
-        propagatedBuildInputs = [
-          chunknet
-          pkgs.rPackages.iotools
-          pkgs.rPackages.dplyr
-        ];
-      };
+        # R Environment
 
-      largescalemodels = pkgs.rPackages.buildRPackage {
-        name = "largescalemodels";
-        version = "1.3";
-        src = ./largescalemodels;
-        propagatedBuildInputs = [
-          largescaleobjects
-          pkgs.rPackages.biglm
-        ];
-      };
-
-      largescalerr = pkgs.rPackages.buildRPackage {
-        name = "largescalemodels";
-        version = "1.3";
-        src = ./.;
-        propagatedBuildInputs = [
-          orcv
-          chunknet
-          largescaleobjects
-          largescalemodels
-        ];
-      };
-
-      Rpackages = [
-        largescalerr
-        orcv
-        chunknet
-        largescaleobjects
-        largescalemodels
-      ];
-
-      R = pkgs.rWrapper.override { packages = Rpackages; };
-      radian = pkgs.radianWrapper.override { packages = Rpackages; };
-
-      # Python Environment
-
-      python = pkgs.python313;
-      workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./largescaler; };
-      pyprojectOverrides = final: prev: {
-        fire = prev.fire.overrideAttrs (old: {
-          nativeBuildInputs = old.nativeBuildInputs ++ [ (final.resolveBuildSystem { setuptools = [ ]; }) ];
-        });
-      };
-
-      pythonSet =
-        (pkgs.callPackage pyproject-nix.build.packages {
-          inherit python;
-        }).overrideScope
-          (
-            lib.composeManyExtensions [
-              pyproject-build-systems.overlays.default
-              overlay
-              pyprojectOverrides
-            ]
-          );
-      overlay = workspace.mkPyprojectOverlay {
-        sourcePreference = "wheel";
-      };
-
-      largescaler = pythonSet.mkVirtualEnv "largescaler-env" workspace.deps.default;
-
-      editableOverlay = workspace.mkEditablePyprojectOverlay {
-        root = "$REPO_ROOT";
-      };
-      editablePythonSet = pythonSet.overrideScope (
-        lib.composeManyExtensions [
-          editableOverlay
-          (final: prev: {
-            largescaler = prev.largescaler.overrideAttrs (old: {
-              nativeBuildInputs =
-                old.nativeBuildInputs
-                ++ final.resolveBuildSystem {
-                  editables = [ ];
-                };
-            });
-          })
-        ]
-      );
-      largescaler-dev = editablePythonSet.mkVirtualEnv "largescaler-dev-env" workspace.deps.all;
-
-      # Container
-
-      baseImage = pkgs.dockerTools.pullImage {
-        imageName = "ubuntu";
-        imageDigest = "sha256:1e622c5f073b4f6bfad6632f2616c7f59ef256e96fe78bf6a595d1dc4376ac02";
-        sha256 = "sha256-qhsqlZVffA2oEF1xYJ4PvTa7F1rJXzaJAfuN0RQBZLc=";
-        finalImageName = "ubuntu";
-        finalImageTag = "noble";
-      };
-
-      container = pkgs.dockerTools.buildImage {
-        name = "largescaler";
-        tag = "latest";
-        # fromImage = baseImage;
-        copyToRoot = pkgs.buildEnv {
-          name = "image-root";
-          paths = [
-            pkgs.coreutils-full
-            pkgs.bash
-            R
-            radian
-            largescaler
-          ] ++ syspkgs;
-          # pathsToLink = [
-          #   "/bin"
-          #   "/lib"
-          #   "/share"
-          # ];
+        largescalerr = pkgs.rPackages.buildRPackage {
+          name = "largescalemodels";
+          version = "1.3";
+          src = ./.;
+          propagatedBuildInputs = [
+            largescalemodels.packages.${system}.default
+          ];
         };
-        extraCommands = "mkdir tmp";
-        config = {
-          Cmd = [ "bash" ];
+
+        Rpackages = [ largescalerr ];
+
+        R = pkgs.rWrapper.override { packages = Rpackages; };
+        radian = pkgs.radianWrapper.override { packages = Rpackages; };
+
+        # Python Environment
+        # don't try understand, this is really trial and error...
+
+        python = pkgs.python313;
+        workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./largescaler; };
+        pyprojectOverrides = final: prev: {
+          fire = prev.fire.overrideAttrs (old: {
+            nativeBuildInputs = old.nativeBuildInputs ++ [ (final.resolveBuildSystem { setuptools = [ ]; }) ];
+          });
         };
-      };
 
-    in
-    {
-      packages.x86_64-linux.default = container;
+        pythonSet =
+          (pkgs.callPackage pyproject-nix.build.packages {
+            inherit python;
+          }).overrideScope
+            (
+              lib.composeManyExtensions [
+                pyproject-build-systems.overlays.default
+                overlay
+                pyprojectOverrides
+              ]
+            );
+        overlay = workspace.mkPyprojectOverlay {
+          sourcePreference = "wheel";
+        };
 
-      devShells.x86_64-linux.default = pkgs.mkShell {
-        buildInputs =
-          with pkgs;
-          [
-            clang
-            clang-tools
-            R
-            radian
-            pkgs.uv
-            largescaler-dev
+        largescaler = pythonSet.mkVirtualEnv "largescaler-env" workspace.deps.default;
+
+        editableOverlay = workspace.mkEditablePyprojectOverlay {
+          root = "$REPO_ROOT";
+        };
+        editablePythonSet = pythonSet.overrideScope (
+          lib.composeManyExtensions [
+            editableOverlay
+            (final: prev: {
+              largescaler = prev.largescaler.overrideAttrs (old: {
+                nativeBuildInputs =
+                  old.nativeBuildInputs
+                  ++ final.resolveBuildSystem {
+                    editables = [ ];
+                  };
+              });
+            })
           ]
-          ++ syspkgs;
-        env = {
-          UV_NO_SYNC = "1";
-          UV_PYTHON = "${largescaler-dev}/bin/python";
-          UV_PYTHON_DOWNLOADS = "never";
+        );
+        largescaler-dev = editablePythonSet.mkVirtualEnv "largescaler-dev-env" workspace.deps.all;
+
+        # Container
+
+        container = pkgs.dockerTools.buildImage {
+          name = "largescaler";
+          tag = "latest";
+          copyToRoot = pkgs.buildEnv {
+            name = "image-root";
+            paths = [
+              pkgs.coreutils-full
+              pkgs.bash
+              R
+              radian
+              largescaler
+            ] ++ syspkgs;
+          };
+          extraCommands = "mkdir tmp";
+          config = {
+            Cmd = [ "bash" ];
+          };
         };
 
-        shellHook = ''
-          unset PYTHONPATH
-          export REPO_ROOT=$(git rev-parse --show-toplevel)/largescaler
-        '';
+      in
+      {
+        packages.default = container;
 
-      };
-    };
+        devShells.default = pkgs.mkShell {
+          buildInputs =
+            with pkgs;
+            [
+              clang
+              clang-tools
+              R
+              radian
+              pkgs.uv
+              largescaler-dev
+            ]
+            ++ syspkgs;
+          env = {
+            UV_NO_SYNC = "1";
+            UV_PYTHON = "${largescaler-dev}/bin/python";
+            UV_PYTHON_DOWNLOADS = "never";
+          };
+
+          shellHook = ''
+            unset PYTHONPATH
+            export REPO_ROOT=$(git rev-parse --show-toplevel)/largescaler
+          '';
+
+        };
+      }
+    );
 }
