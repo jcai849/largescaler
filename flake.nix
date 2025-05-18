@@ -56,10 +56,18 @@
           ];
         };
 
-        Rpackages = [ largescalerr ];
+        Rpackages = [
+          largescalerr
+          pkgs.rPackages.languageserver
+        ];
 
         R = pkgs.rWrapper.override { packages = Rpackages; };
         radian = pkgs.radianWrapper.override { packages = Rpackages; };
+        radian_exec = pkgs.writeShellApplication {
+          name = "r";
+          runtimeInputs = [ radian ];
+          text = "exec radian";
+        };
 
         # Python Environment
         # don't try understand, this is really trial and error...
@@ -141,6 +149,7 @@
               clang-tools
               R
               radian
+              radian_exec
               pkgs.uv
               largescaler-dev
             ]

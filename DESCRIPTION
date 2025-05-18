@@ -1,7 +1,7 @@
 Package: largescaler
 Type: Package
 Title: Set of packages for large scale statistical modelling
-Version: 1.0
+Version: 1.2
 Date: 2023-10-15
 Author: Jason Cairns
 Maintainer: Jason Cairns <jason.cairns@auckland.ac.nz>

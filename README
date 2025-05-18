@@ -1,12 +1,27 @@
-This package can be used to install orcv, chunknet, largescaleobjects, and largescaler.
+ _                               ______             _        ______  
+(_)                             / _____)           | |      (_____ \ 
+ _       _____  ____ ____ _____( (____   ____ _____| | _____ _____) )
+| |     (____ |/ ___) _  | ___ |\____ \ / ___|____ | || ___ |  __  / 
+| |_____/ ___ | |  ( (_| | ____|_____) | (___/ ___ | || ____| |  \ \ 
+|_______)_____|_|   \___ |_____|______/ \____)_____|\_)_____)_|   |_|
+                   (_____|                                           
+
+
+This package can be used to install orcv, chunknet, largescaleobjects, and largescalemodels.
 Each of these packages also have a repository on Rforge and GitHub, and it is worth checking each one individually, with their package-specific demos.
 
-github.com/jcai849/orcv
-github.com/jcai849/chunknet
-github.com/jcai849/largescaleobjects
-github.com/jcai849/largescalemodels
+-> github.com/jcai849/orcv
+-> github.com/jcai849/chunknet
+-> github.com/jcai849/largescaleobjects
+-> github.com/jcai849/largescalemodels
 
 Or, just use this as a flake. Install nix and direnv, then run:
 
-direnv allow
-largescaler run --type=sandbox local --node-count=30
+| direnv allow
+| largescaler run --type=sandbox local --node-count=30
+OR
+| largescaler run --type=lasso   local --node-count=30
+
+Build container (currently failing) with:
+
+| nix build && podman load <result && podman run -it largescaler

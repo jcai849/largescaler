@@ -28,7 +28,7 @@ class Master(Node):
     def _run_cmd(self) -> list[str]:
         match self.run.type:
             case "lasso":
-                run = "demo(lasso)"
+                run = 'demo("lasso", package="largescaler", ask=T, echo=T)'
             case "sandbox":
                 run = ""
             case _:
@@ -39,7 +39,6 @@ class Master(Node):
             "orcv::start()",
             f'chunknet::LOCATOR("localhost", {self.locator_port})',
             run,
-            "1+1",
             "-",
             "interact",
         ]
@@ -48,11 +47,18 @@ class Master(Node):
     def to_kdl(self) -> ckdl.Node:
         return ckdl.Node(
             "pane",
+            properties={"split_direction": "vertical"},
             children=[
-                ckdl.Node("focus", [True]),
-                ckdl.Node("name", [str(self)]),
-                ckdl.Node("command", ["run-interactive"]),
-                ckdl.Node("args", self._run_cmd()),
+                ckdl.Node(
+                    "pane",
+                    children=[
+                        ckdl.Node("focus", [True]),
+                        ckdl.Node("name", [str(self)]),
+                        ckdl.Node("command", ["run-interactive"]),
+                        ckdl.Node("args", self._run_cmd()),
+                    ],
+                ),
+                ckdl.Node("pane", properties={"edit": "demo/lasso.R"}),
             ],
         )
 
@@ -128,7 +134,7 @@ class Local(Cluster):
         self.node_count: int = node_count
         self.run: Run = run
 
-        locator_port = 8000
+        locator_port = 9000
         next_port = locator_port + 1
         self.master: Master = Master(self.run, locator_port)
         self.locator: Locator = Locator(locator_port)
