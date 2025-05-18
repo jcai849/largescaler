@@ -27,11 +27,11 @@
         "utils": "utils_4"
       },
       "locked": {
-        "lastModified": 1747304002,
-        "narHash": "sha256-U+8J37HS7PVEk0gSnWfE7Jaur7GOL8QKim84ZuHuacI=",
+        "lastModified": 1747557622,
+        "narHash": "sha256-i/4h47EwmQiHxjJDMT7lL8wnM3iGocaZhZBZCJGLWT0=",
         "owner": "jcai849",
         "repo": "largescalemodels",
-        "rev": "f35a0ab607fe3c9e43029fca2f59593c7c7007d4",
+        "rev": "759caca205404c452d9c9eec622ac231444f22f7",
         "type": "github"
       },
       "original": {
@@ -47,11 +47,11 @@
         "utils": "utils_3"
       },
       "locked": {
-        "lastModified": 1747303744,
-        "narHash": "sha256-CzKIYkammLFRHxpiHyY/7qLLBLvNhG3abKcCa/J1A6I=",
+        "lastModified": 1747557546,
+        "narHash": "sha256-uDfNfEttaj7rSYtmJCHGOxO2NFGi7vRr3RhCHRB72EY=",
         "owner": "jcai849",
         "repo": "largescaleobjects",
-        "rev": "64e4e63ad86710881719a17b4a8f71193047745d",
+        "rev": "0b2a9f1b36b292e8725793e5d9e8d51bc3d2ede4",
         "type": "github"
       },
       "original": {
